@@ -116,9 +116,12 @@ def lambda_handler(event, context):
             error_msg = f"⚠️ Oops, I crashed! Here is the error:\n\n{str(e)}"
             send_url = f"{BASE_URL}/sendMessage"
             error_payload = {"chat_id": chat_id, "text": error_msg}
-            http.request("POST", send_url, 
-                         body=json.dumps(error_payload), 
-                         headers={'Content-Type': 'application/json'})
+            requests.request(
+                method="POST", 
+                url=send_url, 
+                data=json.dumps(error_payload), 
+                headers={'Content-Type': 'application/json'
+            })
         except:
             pass 
             
