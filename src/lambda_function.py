@@ -2,6 +2,7 @@ import json
 import boto3
 import urllib3
 import os
+import requests
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -12,7 +13,6 @@ BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
 # Initialize resources
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('TelegramBotData')
-http = urllib3.PoolManager()
 
 def lambda_handler(event, context):
     try:
@@ -39,8 +39,8 @@ def lambda_handler(event, context):
             
             # Step A: Get the file path from Telegram
             get_file_url = f"{BASE_URL}/getFile?file_id={file_id}"
-            file_resp = http.request('GET', get_file_url)
-            file_data = json.loads(file_resp.data.decode('utf-8'))
+            file_resp = requests.request(method='GET', url=get_file_url)
+            file_data = file_resp.json()
             
             if file_data.get('ok'):
                 file_path = file_data['result']['file_path']
@@ -48,8 +48,8 @@ def lambda_handler(event, context):
                 print(f"Downloading image from: {download_url}")
                 
                 # Step B: Download the actual image bytes into memory
-                image_response = http.request('GET', download_url)
-                image_bytes = image_response.data
+                image_response = requests.request(method='GET', url=download_url)
+                image_bytes = image_response.json()
                 
                 print("Resizing image with Pillow...")
                 # Step C: Open and resize the image using Pillow
@@ -66,10 +66,10 @@ def lambda_handler(event, context):
                 # Step D: Send the resized photo back to Telegram
                 send_photo_url = f"{BASE_URL}/sendPhoto"
                 
-                http.request(
-                    'POST', 
-                    send_photo_url,
-                    fields={
+                requests.request(
+                    method='POST', 
+                    url=send_photo_url,
+                    data={
                         'chat_id': str(chat_id),
                         'photo': ('resized_image.jpg', output_buffer.read(), 'image/jpeg'),
                         'caption': 'Here is your resized image! 📸'
@@ -103,8 +103,8 @@ def lambda_handler(event, context):
             send_url = f"{BASE_URL}/sendMessage"
             payload = {"chat_id": chat_id, "text": final_msg}
             
-            answer_reply = http.request("POST", send_url, body=json.dumps(payload), headers={'Content-Type': 'application/json'})
-            print(f"Telegram response: {answer_reply.data.decode('utf-8')}")
+            answer_reply = requests.request(method="POST", url=send_url, data=json.dumps(payload), headers={'Content-Type': 'application/json'})
+            print(f"Telegram response: {answer_reply.json}")
 
         return {"statusCode": 200}
 
