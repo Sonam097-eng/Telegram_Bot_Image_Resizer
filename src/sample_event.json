@@ -1,0 +1,36 @@
+{
+    "version": "2.0",
+    "routeKey": "ANY /Image_resizer",
+    "rawPath": "/test/Image_resizer",
+    "rawQueryString": "",
+    "headers": {
+        "accept-encoding": "gzip, deflate",
+        "content-length": "1007",
+        "content-type": "application/json",
+        "host": "a8vir5n7nj.execute-api.ap-south-1.amazonaws.com",
+        "x-amzn-trace-id": "Root=1-69b8039a-23aeeabc4a45a04377737003",
+        "x-forwarded-for": "91.108.5.111",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https"
+    },
+    "requestContext": {
+        "accountId": "712840281680",
+        "apiId": "a8vir5n7nj",
+        "domainName": "a8vir5n7nj.execute-api.ap-south-1.amazonaws.com",
+        "domainPrefix": "a8vir5n7nj",
+        "http": {
+            "method": "POST",
+            "path": "/test/Image_resizer",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "91.108.5.111",
+            "userAgent": ""
+        },
+        "requestId": "aUWAJjEVBcwEPvA=",
+        "routeKey": "ANY /Image_resizer",
+        "stage": "test",
+        "time": "16/Mar/2026: 13: 20: 26 +0000",
+        "timeEpoch": 1773667226131
+    },
+    "body": "{\"update_id\": 247610352, \"message\": {\"message_id\": 76, \"from\": {\"id\": 811254490, \"is_bot\": false, \"first_name\": \"Super\", \"last_name\": \"Desk\", \"username\": \"superdesk\", \"language_code\": \"en\"}, \"chat\": {\"id\": 811254490, \"first_name\": \"Super\", \"last_name\": \"Desk\", \"username\": \"superdesk\", \"type\": \"private\"}, \"date\": 1773667225, \"photo\": [{\"file_id\": \"AgACAgUAAxkBAANMabgDmXqzXPG1DizfeJZdGWilLwsAAlUQaxtutcFVkG9kuK6I1YIBAAMCAANzAAM6BA\", \"file_unique_id\": \"AQADVRBrG261wVV4\", \"file_size\": 862, \"width\": 39, \"height\": 90}, {\"file_id\": \"AgACAgUAAxkBAANMabgDmXqzXPG1DizfeJZdGWilLwsAAlUQaxtutcFVkG9kuK6I1YIBAAMCAANtAAM6BA\", \"file_unique_id\": \"AQADVRBrG261wVVy\", \"file_size\": 9283, \"width\": 140, \"height\": 320}, {\"file_id\": \"AgACAgUAAxkBAANMabgDmXqzXPG1DizfeJZdGWilLwsAAlUQaxtutcFVkG9kuK6I1YIBAAMCAAN4AAM6BA\", \"file_unique_id\": \"AQADVRBrG261wVV9\", \"file_size\": 40271, \"width\": 350, \"height\": 800}, {\"file_id\": \"AgACAgUAAxkBAANMabgDmXqzXPG1DizfeJZdGWilLwsAAlUQaxtutcFVkG9kuK6I1YIBAAMCAAN5AAM6BA\", \"file_unique_id\": \"AQADVRBrG261wVV-\", \"file_size\": 71082, \"width\": 560, \"height\": 1280}]}}",
+    "isBase64Encoded": false
+}
