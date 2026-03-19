@@ -3,12 +3,15 @@ import os
 from requests import request
 import io
 from PIL import Image
+import re
 
 
 TOKEN = os.environ.get("BOT_TOKEN")
 print(f"token:{TOKEN}")
 url= f"https://api.telegram.org/bot{TOKEN}"
 file_url= f"https://api.telegram.org/file/bot{TOKEN}"
+
+extracted_caption_value= ""
 
 def lambda_handler(event, context):
     # print(event)
@@ -17,6 +20,10 @@ def lambda_handler(event, context):
     chat_id= message.get('chat').get('id')
     #username= message.get('from').get('first_name').get('last_name')
     photo_list= message.get('photo',[])
+    caption= body.get('message',{}).get('caption')
+    if not caption in message.get('caption'):
+        return{"message":"caption not found", "status_code":400}
+    
     if not photo_list or not chat_id:
         return{"message":"neither image nor chat_id found","status_code":400}
     file_id= photo_list[-1].get('file_id')  
@@ -39,12 +46,19 @@ def lambda_handler(event, context):
 
     image_bytes= image_resp.content
    # print(f"image_bytes:{image_bytes}")
+    size_value= 1024*1024
 
     with Image.open(io.BytesIO(image_bytes))as image:
-        image.thumbnail((500,500))
-        output_buffer= io.BytesIO()
-        image.save(output_buffer,format='JPEG')
-        output_buffer.seek(0)
+        quality= 95
+        while quality > 10:
+            output_buffer= io.BytesIO()
+            image.save(output_buffer,format='JPEG',quality= quality, optimize= True)
+            if len(output_buffer.getvalue()) < size_value:
+                output_buffer.seek(0)
+                break
+            quality -= 5
+            output_buffer.seek(0)    
+            
     
     send_url= f"{url}/sendPhoto"
     print(f"send_url:{send_url}")
