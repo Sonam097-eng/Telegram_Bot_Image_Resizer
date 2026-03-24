@@ -20,8 +20,27 @@ def get_url():
     return url, file_url
 
 def call_telegram(method, url, data=None, files=None, headers=None, params=None):
-    resp = request(method = method, url= url, data= data, files= files, headers=headers, params=params)
-    return resp
+    try:
+        resp = request(method = method, url= url, data= data, files= files, headers=headers, params=params)
+        if resp.status_code not in [200, 201, 202, 203, 204]:
+            return {
+                "status": False,
+                "resp" : resp,
+                "status_code" : resp.status_code
+            }
+        return{
+            "status": True,
+            "resp": resp,
+            "status_code": resp.status_code
+        }
+        
+    except Exception as e:
+        return {
+                "status": False,
+                "resp": e,
+                "status_code": None
+            } 
+    
 
 def resizing_image(image_bytes, size_value):
 
@@ -52,10 +71,12 @@ def lambda_handler(event, context):
             "chat_id":chat_id,
             "text":"Please send me photo!I resizes images only"
         }
-        resp_data = call_telegram("GET", text_url, data=text_payload)
-
-        if not resp_data.get("status"):
-                return{"message": resp_data.get("resp"), "status_code": 500 if not resp_data.get("status_code") else resp_data.get("status_code")}    
+        resp = call_telegram("GET", text_url, data=text_payload)
+        if not resp.get("status"):
+            return{"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}
+            
+        #if not resp.get("status"):
+         #       return{"message": resp.get("resp"), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}    
         return {"message":"Image not found", "status_code":200}
     
                            
@@ -65,10 +86,9 @@ def lambda_handler(event, context):
         caption_text = "Please send me caption so that i can resize my image"
         
         resp = call_telegram("GET", caption_url, data=caption_text)
-        if resp.status_code not in [200, 201, 203, 204]:
-            return{"message":"send caption response not worked", "status_code":500}
-        return{"message":"Dont get caption", "status_code":200}
-
+        if not resp.get("status"):
+            return{"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}
+        return {"message":"caption not found", "status_code":200}
 
     match= re.search(r"(\d+)\s*mb", caption.lower())
     if not match:
@@ -83,37 +103,43 @@ def lambda_handler(event, context):
     file_path_url= f"{url}/getFile?file_id={file_id}"
     
     resp = call_telegram("GET", file_path_url)
+    if not resp.get("status"):
+           return{"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}    
+
     print(f"path_response:{resp}")
-    path_data= resp.json()
-    
+    path_data = resp.get("resp")
+    path_data = path_data.json()
     file_path= path_data.get('result',{}).get('file_path')
-    
+        
     if not file_path:
-         return{f"Not found file:{file_path},status_code:400"}
+        return{f"Not found file:{file_path},status_code:400"}
+        
     
     download_url= f"{file_url}/{file_path}"
     
     resp = call_telegram("GET", download_url)
-    
-    image_bytes= resp.content
-   # print(f"image_bytes:{image_bytes}")
+    if not resp.get("status"):
+        return {"message": resp.get("resp"), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}    
+
+    image_bytes= resp.get("resp").content
+    # print(f"image_bytes:{image_bytes}")
 
     size_value = resizing_mb
     output_buffer = resizing_image(image_bytes, size_value )
     send_url= f"{url}/sendPhoto"
     print(f"send_url:{send_url}")
     fields= {
-        'chat_id': str(chat_id),
-        'caption': 'Here is your resized image!'
-     }
+            'chat_id': str(chat_id),
+            'caption': 'Here is your resized image!'
+        }
     files= {'photo':(('image.jpg', output_buffer, 'image/jpeg'))}
     resp= call_telegram("POST", send_url, data=fields, files=files)
     print(f"send_resp:{resp}")
-    return{
-        'status_code':200,
-        'message':'success'
-    }
-    
+    if not resp.get("status"):
+        return{"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}
+    return {"message":"Data found", "status_code":200}
+
+        
 
     
 
@@ -127,4 +153,5 @@ if __name__ == "__main__":
         token = token_data.get("token")
     os.environ["BOT_TOKEN"] = token
     
-    lambda_handler(sample_event, None)
+    return_result = lambda_handler(sample_event, None)
+    print(f"returned result: {return_result}")
