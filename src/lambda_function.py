@@ -20,8 +20,10 @@ def get_url():
     return url, file_url
 
 def call_telegram(method, url, data=None, files=None, headers=None, params=None):
+    print(f"Sending a request with method: {method} to url: {url}")
     try:
         resp = request(method = method, url= url, data= data, files= files, headers=headers, params=params)
+        print(f"Got response : {resp.text}")
         if resp.status_code not in [200, 201, 202, 203, 204]:
             return {
                 "status": False,
@@ -56,55 +58,59 @@ def resizing_image(image_bytes, size_value):
             output_buffer.seek(0)
     return output_buffer       
     
+def send_message_to_user(chat_id, drafted_message):
+    text_payload={
+            "chat_id":chat_id,
+            "text": drafted_message
+        }
+    url, _ = get_url()
+    text_url= f"{url}/sendMessage"
+    method = "GET"
+    print(f"Calling with chat_id: {chat_id}, method : {method}, url: {text_url} for send drafted message: {drafted_message}")
+    resp = call_telegram(method, text_url, data=text_payload)
+    if not resp.get("status"):
+        print(f"Something went wrong while sending resp to user for url: {text_url}")
+        return{"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}
+        #if not resp.get("status"):
+         #       return{"message": resp.get("resp"), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}    
+    return {"message":"Image not found", "status_code":200}
+    
 
 def lambda_handler(event, context):
     # print(event)
     body= json.loads(event.get('body',{}))
     message= body.get('message',{})
     chat_id= message.get('chat').get('id')
+    if not chat_id:
+        print("Something went wrong for Photo or chat id not found")
+        return{"message":"chat_id not found","status_code": 404}
+    
     #username= message.get('from').get('first_name').get('last_name')
     photo_list= message.get('photo',[])
+    url, file_url = get_url()
 
     if not photo_list:
-        text_url= f"{url}/send_message"
-        text_payload={
-            "chat_id":chat_id,
-            "text":"Please send me photo!I resizes images only"
-        }
-        resp = call_telegram("GET", text_url, data=text_payload)
-        if not resp.get("status"):
-            return{"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}
-            
-        #if not resp.get("status"):
-         #       return{"message": resp.get("resp"), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}    
-        return {"message":"Image not found", "status_code":200}
-    
+        return send_message_to_user(chat_id=chat_id, drafted_message="Please send me photo!I resizes images only")
                            
     caption= body.get('message',{}).get('caption')
     if not caption:
-        caption_url = f"{url}/send_caption"
-        caption_text = "Please send me caption so that i can resize my image"
+        return send_message_to_user(chat_id=chat_id, drafted_message="Please send me caption so that i can resize my image")
         
-        resp = call_telegram("GET", caption_url, data=caption_text)
-        if not resp.get("status"):
-            return{"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}
-        return {"message":"caption not found", "status_code":200}
-
     match= re.search(r"(\d+)\s*mb", caption.lower())
     if not match:
-            return{"message":"doesnt match with caption", "status_code":400}
+        return send_message_to_user(chat_id=chat_id, drafted_message="'mb' keyword in caption not found! Please provide a size under which you want to resize the imamge eg. 1 mb") 
+        
     resizing_mb = int(match.group(1))
-    print(f"message:got value{resizing_mb}")
+    print(f"Got resizing size: {resizing_mb}")
     
-    if not photo_list or not chat_id:
-        return{"message":"neither image nor chat_id found","status_code":400}
     file_id = photo_list[-1].get('file_id')  
-    url, file_url = get_url()
     file_path_url= f"{url}/getFile?file_id={file_id}"
     
     resp = call_telegram("GET", file_path_url)
     if not resp.get("status"):
-           return{"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}    
+        print("Something went wrong while getting file_path of image")
+        send_message_to_user(chat_id=chat_id, drafted_message="Something Went wrong while getting Image from Telegram")
+        return {"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}    
 
     print(f"path_response:{resp}")
     path_data = resp.get("resp")
@@ -112,13 +118,14 @@ def lambda_handler(event, context):
     file_path= path_data.get('result',{}).get('file_path')
         
     if not file_path:
-        return{f"Not found file:{file_path},status_code:400"}
-        
+        send_message_to_user(chat_id=chat_id, drafted_message=f"Something Went wrong while processing file_path from telegram")
+        return {"message": f"Not found file: {file_path}", "status_code": 404}
     
     download_url= f"{file_url}/{file_path}"
     
     resp = call_telegram("GET", download_url)
     if not resp.get("status"):
+        send_message_to_user(chat_id=chat_id, drafted_message="Something Went wrong while downloading image to resize")
         return {"message": resp.get("resp"), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}    
 
     image_bytes= resp.get("resp").content
@@ -136,7 +143,9 @@ def lambda_handler(event, context):
     resp= call_telegram("POST", send_url, data=fields, files=files)
     print(f"send_resp:{resp}")
     if not resp.get("status"):
+        send_message_to_user(chat_id= chat_id, drafted_message="Something went wrong while sending the resized image to user")
         return{"message": resp.get("resp").json(), "status_code": 500 if not resp.get("status_code") else resp.get("status_code")}
+    print("Processing completed!")
     return {"message":"Data found", "status_code":200}
 
         
