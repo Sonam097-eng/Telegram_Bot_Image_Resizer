@@ -8,12 +8,13 @@ from PIL import Image
 
 
 class TelegramBot:
-    def __init__(self, token):
-        if not token:
+    def __init__(self):
+        self.token = os.environ.get("BOT_TOKEN")
+        print(f"Token: {self.token}")
+        if not self.token:
             print(f"Bot token is misssing")
             raise ValueError("Telegram bot doesnt work without token")
 
-        self.token = token
         self.base_url = f"https://api.telegram.org/bot{self.token}"
         self.file_url = f"https://api.telegram.org/file/bot{self.token}"
 
@@ -73,6 +74,7 @@ class ImageResizer:
                 quality -= 5
                 output_buffer.seek(0)
                 return output_buffer
+
 class WebhookHandler:
     def __init__(self, bot: TelegramBot , resizer: ImageResizer):
         self.bot = bot
@@ -122,9 +124,9 @@ class WebhookHandler:
         print("processing complete succesfully")
         return{"message":"success", "status_code": 200}
     
+    
 def lambda_handler(event, context):
-    token = os.environ.get("BOT_TOKEN")
-    bot = TelegramBot(token)
+    bot = TelegramBot()
     resizer = ImageResizer()
     handler= WebhookHandler(bot, resizer)
     
@@ -135,17 +137,21 @@ if __name__ == "__main__":
     try:
         with open("src/variables.json", "r") as f:
             token_data = json.load(f)
-            os.environ["BOT_TOKEN"] = token_data.get("token", "")
+            environment = token_data.get("env")
+            print(f"Environment: {environment}")
+            if not environment:
+                raise ValueError(f"Environment Not Found: {environment}")
+            os.environ["BOT_TOKEN"] = token_data.get(environment).get("token", "")
     except Exception as e:
         print(f"Error found as ")
 
     try:
         with open("src/sample_event.json", "r") as f:
-            sample_event= json.load(f)
+            sample_event = json.load(f)
         return_result = lambda_handler(sample_event, None)
         print(f"returned_result:{return_result}")
     except Exception as e:
-        print(f"Error found as {e}")    
+        print(f"Error found as {e}")
 
 
 

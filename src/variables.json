@@ -1,0 +1,12 @@
+{
+    "env": "test",
+    "prod": {
+        "token": ""
+    },
+    "stg": {
+        "token": ""
+    },
+    "test": {
+        "token": ""
+    }
+}
