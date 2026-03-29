@@ -11,6 +11,7 @@ class TelegramBot:
     def __init__(self, token):
         if not token:
             print(f"Bot token is misssing")
+            raise ValueError("Telegram bot doesnt work without token")
 
         self.token = token
         self.base_url = f"https://api.telegram.org/bot{self.token}"
