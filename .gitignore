@@ -17,4 +17,3 @@ env/
 # Ignore Environment Variables
 *.env
 #ignore variables.json
-variables.json
