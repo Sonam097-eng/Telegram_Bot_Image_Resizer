@@ -72,8 +72,8 @@ class ImageResizer:
                     output_buffer.seek(0)
                     return output_buffer
                 quality -= 5
-                output_buffer.seek(0)
-                return output_buffer
+            output_buffer.seek(0)
+            return output_buffer
 
 class WebhookHandler:
     def __init__(self, bot: TelegramBot , resizer: ImageResizer):
@@ -135,7 +135,7 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     try:
-        with open("src/variables.json", "r") as f:
+        with open("Telegram_Bot_Image_Resizer\src\\variables.json", "r") as f:
             token_data = json.load(f)
             environment = token_data.get("env")
             print(f"Environment: {environment}")
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         print(f"Error found as ")
 
     try:
-        with open("src/sample_event.json", "r") as f:
+        with open("Telegram_Bot_Image_Resizer\src\sample_event.json", "r") as f:
             sample_event = json.load(f)
         return_result = lambda_handler(sample_event, None)
         print(f"returned_result:{return_result}")
