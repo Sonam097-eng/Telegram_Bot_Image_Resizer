@@ -32,7 +32,7 @@ class TelegramBot:
             return{"status":False, "resp":f"{str(e)}", "status_code":500}
         
     def send_message(self, chat_id, data):
-        payload = {"chat_id": chat_id, "data": data}
+        payload = {"chat_id": chat_id, "text": data}
         return self.call_api("POST", "sendMessage", data = payload)
     
     def send_photo(self, chat_id, photo_buffer, caption = ""):
@@ -135,7 +135,7 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     try:
-        with open("Telegram_Bot_Image_Resizer\src\\variables.json", "r") as f:
+        with open("src/variables.json", "r") as f:
             token_data = json.load(f)
             environment = token_data.get("env")
             print(f"Environment: {environment}")
@@ -146,17 +146,12 @@ if __name__ == "__main__":
         print(f"Error found as ")
 
     try:
-        with open("Telegram_Bot_Image_Resizer\src\sample_event.json", "r") as f:
+        with open("src\sample_event.json", "r") as f:
             sample_event = json.load(f)
         return_result = lambda_handler(sample_event, None)
         print(f"returned_result:{return_result}")
     except Exception as e:
         print(f"Error found as {e}")
-
-
-
-             
-
 
 
 
