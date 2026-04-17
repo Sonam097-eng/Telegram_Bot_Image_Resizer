@@ -1,0 +1,12 @@
+{
+    "env": "test",
+    "prod": {
+        "token": "<YOUR_TELEGRAM_BOT_TOKEN>"
+    },
+    "stg": {
+        "token": "<YOUR_TELEGRAM_BOT_TOKEN>"
+    },
+    "test": {
+        "token": "<YOUR_TELEGRAM_BOT_TOKEN>"
+    }
+}

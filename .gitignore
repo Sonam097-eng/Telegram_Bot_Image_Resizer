@@ -1,0 +1,20 @@
+# Ignore Mac/Windows system files
+.DS_Store
+Thumbs.db
+
+# Ignore Python cache
+__pycache__/
+*.pyc
+
+# Ignore large layer zips
+layer/*.zip
+python/
+
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore Environment Variables
+*.env
+#ignore variables.json
+variables.json
